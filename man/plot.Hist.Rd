@@ -4,10 +4,30 @@
 \alias{plot.Hist}
 \title{Box-arrow diagrams for multi-state models.}
 \usage{
-\method{plot}{Hist}(x, nrow, ncol, stateLabels, arrowLabels,
-  arrowLabelStyle = "symbolic", arrowLabelSymbol = "lambda",
-  changeArrowLabelSide, tagBoxes = FALSE, startCountZero = TRUE,
-  oneFitsAll, margin, cex, verbose = FALSE, ...)
+\method{plot}{Hist}(
+  x,
+  nrow,
+  ncol,
+  box.width,
+  box.height,
+  box.padding,
+  xbox.position,
+  ybox.position,
+  stateLabels,
+  arrowLabels,
+  arrowLabelStyle = "symbolic",
+  arrowLabelSymbol = "lambda",
+  changeArrowLabelSide,
+  curved,
+  tagBoxes = FALSE,
+  startCountZero = TRUE,
+  oneFitsAll,
+  margin,
+  cex,
+  rasta = FALSE,
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{An object of class \code{Hist}.}
@@ -16,48 +36,67 @@
 
 \item{ncol}{the number of graphic columns}
 
+\item{box.width}{the widths of the boxes on the scale from 0 to 100}
+
+\item{box.height}{the heights of the boxes on the scale from 0 to 100}
+
+\item{box.padding}{how much room there should be between the label and the border of a box.
+Two values on the scale from 0 to 100: the first for the horizontal
+x-direction and the second for the vertical y-direction padding.}
+
+\item{xbox.position}{the x box positions (left lower corner) on the scale from 0 to 100.}
+
+\item{ybox.position}{the y box positions (left lower corner) on the scale from 0 to 100.}
+
 \item{stateLabels}{Vector of names to appear in the boxes (states).
-Defaults to attr(x,"state.names").  The boxes can also be individually
-labeled by smart arguments of the form \code{box3.label="diseased"}, see
-examples.}
+Defaults to attr(x,"state.names").  The boxes can also be
+individually labeled by smart arguments of the form
+\code{box3.label="diseased"}, see examples.}
 
-\item{arrowLabels}{Vector of labels to appear in the boxes (states). One for
-each arrow.  The arrows can also be individually labeled by smart arguments
-of the form \code{arrow1.label=paste(expression(eta(s,u)))}, see examples.}
+\item{arrowLabels}{Vector of labels to appear in the boxes
+(states). One for each arrow.  The arrows can also be
+individually labeled by smart arguments of the form
+\code{arrow1.label=paste(expression(eta(s,u)))}, see examples.}
 
-\item{arrowLabelStyle}{Either "symbolic" for automated symbolic arrow
-labels, or "count" for arrow labels that reflect the number of transitions
-in the data.}
+\item{arrowLabelStyle}{Either "symbolic" for automated symbolic
+arrow labels, or "count" for arrow labels that reflect the
+number of transitions in the data.}
 
-\item{arrowLabelSymbol}{Symbol for automated symbolic arrow labels. Defaults
-to "lambda".}
+\item{arrowLabelSymbol}{Symbol for automated symbolic arrow
+labels. Defaults to "lambda".}
 
-\item{changeArrowLabelSide}{A vector of mode logical (TRUE,FALSE) one for
-each arrow to change the side of the arrow on which the label is placed.}
+\item{changeArrowLabelSide}{A vector of mode logical (TRUE,FALSE)
+one for each arrow to change the side of the arrow on which the
+label is placed.}
 
-\item{tagBoxes}{Logical. If TRUE the boxes are numbered in the upper left
-corner. The size can be controlled with smart argument boxtags.cex. The
-default is boxtags.cex=1.28.}
+\item{curved}{The curvature of curved arrows via diagram::curvedarrow. Experimental. Values between 0 (no curvature) and 1 are meaningful.}
 
-\item{startCountZero}{Control states numbers for symbolic arrow labels and
-box tags.}
+\item{tagBoxes}{Logical. If TRUE the boxes are numbered in the
+upper left corner. The size can be controlled with smart
+argument boxtags.cex. The default is boxtags.cex=1.28.}
 
-\item{oneFitsAll}{If \code{FALSE} then boxes have individual size, depending
-on the size of the label, otherwise all boxes have the same size dependent
-on the largest label.}
+\item{startCountZero}{Control states numbers for symbolic arrow
+labels and box tags.}
 
-\item{margin}{Set the figure margin via \code{par(mar=margin)}. Less than 4
-values are repeated.}
+\item{oneFitsAll}{If \code{FALSE} then boxes have individual size,
+depending on the size of the label, otherwise all boxes have
+the same size dependent on the largest label.}
 
-\item{cex}{Initial cex value for the state and the arrow \code{labels}.}
+\item{margin}{Set the figure margin via
+\code{par(mar=margin)}. Less than 4 values are repeated.}
+
+\item{cex}{Initial cex value for the state and the arrow
+\code{labels}.}
+
+\item{rasta}{For construction purposes.}
 
 \item{verbose}{If TRUE echo various things.}
 
-\item{\dots}{Smart control of arguments for the subroutines text (box
-label), rect (box), arrows, text (arrow label). Thus the three dots can be
-used to draw individual boxes with individual labels, arrows and arrow
-labels. E.g. arrow2.label="any label" changes the label of the second arrow.
-See examples.}
+\item{\dots}{Smart control of arguments for the subroutines text
+(box label), rect (box), arrows, text (arrow label). Thus the
+three dots can be used to draw individual boxes with individual
+labels, arrows and arrow labels. E.g. arrow2.label="any label"
+changes the label of the second arrow.  See examples.}
 }
 \description{
 Automated plotting of the states and transitions that characterize a multi
@@ -65,8 +104,8 @@ states model.
 }
 \note{
 Use the functionality of the unix program `dot'
-http://www.graphviz.org/About.php via R package Rgraphviz to obtain more
-complex graphs.
+    http://www.graphviz.org/About.php via R package Rgraphviz to
+    obtain more complex graphs.
 }
 \examples{
 
@@ -76,11 +115,11 @@ complex graphs.
 SurvFrame <- data.frame(time=1:10,status=c(0,1,1,0,0,1,0,0,1,0))
 SurvHist <- with(SurvFrame,Hist(time,status))
 plot(SurvHist)
-plot(SurvHist,box2.col=2,box2.label="experienced\\nR user")
+plot(SurvHist,box2.col=2,box2.label="experienced\nR user")
 plot(SurvHist,
      box2.col=2,
      box1.label="newby",
-     box2.label="experienced\\nR user",
+     box2.label="experienced\nR user",
      oneFitsAll=FALSE,
      arrow1.length=.5,
      arrow1.label="",
@@ -90,7 +129,7 @@ plot(SurvHist,
 plot(SurvHist,
      box2.col=2,
      box1.label="newby",
-     box2.label="experienced\\nR user",
+     box2.label="experienced\nR user",
      oneFitsAll=FALSE,
      arrow1.length=.5,
      arrow1.label="",
@@ -101,7 +140,7 @@ plot(SurvHist,
 plot(SurvHist,
      box2.col=2,
      box1.label="newby",
-     box2.label="experienced\\nR user",
+     box2.label="experienced\nR user",
      oneFitsAll=FALSE,
      arrow1.length=.5,
      arrow1.label="",
@@ -123,14 +162,14 @@ CRHist <- with(comprisk.model,Hist(time,status,cens.code=2))
 plot(CRHist)
 plot(CRHist,arrow1.label=paste(expression(eta(s,u))))
 
-plot(CRHist,box2.label="This\\nis\\nstate 2",arrow1.label=paste(expression(gamma[1](t))))
-plot(CRHist,box3.label="Any\\nLabel",arrow2.label="any\\nlabel")
+plot(CRHist,box2.label="This\nis\nstate 2",arrow1.label=paste(expression(gamma[1](t))))
+plot(CRHist,box3.label="Any\nLabel",arrow2.label="any\nlabel")
 
 ## change the layout
 plot(CRHist,
      box1.label="Alive",
-     box2.label="Dead\\n cause 1",
-     box3.label="Dead\\n cause 2",
+     box2.label="Dead\n cause 1",
+     box3.label="Dead\n cause 2",
      arrow1.label=paste(expression(gamma[1](t))),
      arrow2.label=paste(expression(eta[2](t))),
      box1.col=2,
@@ -152,18 +191,18 @@ plot(CRHist2,box1.row=2)
 
 ## illness-death models
 illness.death.frame <- data.frame(time=1:4,
-				  from=c("Disease\\nfree",
-                                      "Disease\\nfree",
+				  from=c("Disease\nfree",
+                                      "Disease\nfree",
                                       "Diseased",
-                                      "Disease\\nfree"),
+                                      "Disease\nfree"),
 				  to=c("0","Diseased","Dead","Dead"))
 IDHist <- with(illness.death.frame,Hist(time,event=list(from,to)))
 plot(IDHist)
 
 ## illness-death with recovery
 illness.death.frame2 <- data.frame(time=1:5,
-from=c("Disease\\nfree","Disease\\nfree","Diseased","Diseased","Disease\\nfree"),
-to=c("0","Diseased","Disease\\nfree","Dead","Dead"))
+from=c("Disease\nfree","Disease\nfree","Diseased","Diseased","Disease\nfree"),
+to=c("0","Diseased","Disease\nfree","Dead","Dead"))
 IDHist2 <- with(illness.death.frame2,Hist(time,event=list(from,to)))
 plot(IDHist2)
 
@@ -176,12 +215,12 @@ plot(y)
 
 d <- data.frame(time=1:5,from=c(1,1,1,2,2),to=c(2,3,4,3,4))
 h <- with(d,Hist(time,event=list(from,to)))
-plot(h,
+plot(h,box.padding=c(5,2),
 tagBoxes=TRUE,
-stateLabels=c("Remission\\nwithout\\nGvHD",
-    "Remission\\nwith\\nGvHD",
+stateLabels=c("Remission\nwithout\nGvHD",
+    "Remission\nwith\nGvHD",
     "Relapse",
-    "Death\\nwithout\\nrelapse"),
+    "Death\nwithout\nrelapse"),
 arrowLabelSymbol='alpha',
 arrowlabel3.x=35,
 arrowlabel3.y=53,

@@ -28,7 +28,7 @@
 ##' 
 ##' (2) For cluster-correlated data the right hand side of \code{formula} may
 ##' identify a \code{\link{cluster}} variable. In that case Greenwood's variance
-##' formula is replaced by the formula of Ying \& Wei (1994).
+##' formula is replaced by the formula of Ying and Wei (1994).
 ##' 
 ##' (3) Competing risk models can be specified via \code{\link{Hist}} response
 ##' objects in \code{formula}.
@@ -402,18 +402,20 @@
         if (weighted==TRUE) caseweights <- caseweights[neighbors]
     }
   
-  # }}}
-  # {{{ delay (left truncation)
-  delayed <- attr(event.history,"entry.type")=="leftTruncated"
-  ## && !(attr(event.history,"entry.type")=="")
-  if (!delayed) { ## either NULL or ""
-      entrytime <- NULL
-  }  else {
-      entrytime <- response[,"entry"]
-      if(!(all(entrytime>=0)))
-          stop(paste("Not all entry times in dataset are greater or equal to zero."))
-  }
-  # }}}
+    # }}}
+    # {{{ delay (left truncation)
+    delayed <- attr(event.history,"entry.type")=="leftTruncated"
+    if (!delayed) { ## either NULL or ""
+        entrytime <- NULL
+    }  else {
+        entrytime <- response[,"entry"]
+        if(!(all(entrytime>=0)))
+            stop(paste("Not all entry times in dataset are greater or equal to zero."))
+        if (any(entrytime==response[,"time"]))
+            warning("For some subjects the entry time is equal to the event time.
+  This could be a mistake in the data.")
+    }
+    # }}}
 
     # {{{  bound on the number of unique time points over all strata  
     switch(cotype,
@@ -561,7 +563,37 @@
             }
             else{
                 ## right censored not clustered
-                fit <- .C("prodlimSRC",as.double(response[,"time"]),as.double(response[,"status"]),integer(0),as.double(entrytime),as.double(caseweights),integer(0),as.integer(N),integer(0),integer(0),as.integer(NU),as.integer(size.strata),time=double(N),nrisk=double(N),nevent=double(N),ncens=double(N),surv=double(N),double(0),hazard = double(N),var.hazard=double(N),extra.double=double(0),max.nc=integer(0),ntimes=integer(1),ntimes.strata=integer(NU),first.strata=integer(NU),as.integer(reverse),model=as.integer(0),independent=as.integer(1),delayed=as.integer(delayed),weighted=as.integer(weighted),PACKAGE="prodlim")
+                fit <- .C("prodlimSRC",
+                          as.double(response[,"time"]),
+                          as.double(response[,"status"]),
+                          integer(0),
+                          as.double(entrytime),
+                          as.double(caseweights),
+                          integer(0),
+                          as.integer(N),
+                          integer(0),
+                          integer(0),
+                          as.integer(NU),
+                          as.integer(size.strata),
+                          time=double(N),
+                          nrisk=double(N),
+                          nevent=double(N),
+                          ncens=double(N),
+                          surv=double(N),
+                          double(0),
+                          hazard = double(N),
+                          var.hazard=double(N),
+                          extra.double=double(0),
+                          max.nc=integer(0),
+                          ntimes=integer(1),
+                          ntimes.strata=integer(NU),
+                          first.strata=integer(NU),
+                          as.integer(reverse),
+                          model=as.integer(0),
+                          independent=as.integer(1),
+                          delayed=as.integer(delayed),
+                          weighted=as.integer(weighted),
+                          PACKAGE="prodlim")
                 NT <- fit$ntimes
                 Cout <- list("time"=fit$time[1:NT],
                              "n.risk"=fit$nrisk[1:NT],

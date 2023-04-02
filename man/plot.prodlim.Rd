@@ -5,12 +5,37 @@
 \alias{lines.prodlim}
 \title{Plotting event probabilities over time}
 \usage{
-\method{plot}{prodlim}(x, type, cause, select, newdata, add = FALSE, col,
-  lty, lwd, ylim, xlim, ylab, xlab = "Time", timeconverter,
-  legend = TRUE, logrank = FALSE, marktime = FALSE, confint = TRUE,
-  automar, atrisk = ifelse(add, FALSE, TRUE), timeOrigin = 0,
-  axes = TRUE, background = TRUE, percent = TRUE, minAtrisk = 0,
-  limit = 10, ...)
+\method{plot}{prodlim}(
+  x,
+  type,
+  cause,
+  select,
+  newdata,
+  add = FALSE,
+  col,
+  lty,
+  lwd,
+  ylim,
+  xlim,
+  ylab,
+  xlab = "Time",
+  num.digits = 2,
+  timeconverter,
+  legend = TRUE,
+  short.labels = TRUE,
+  logrank = FALSE,
+  marktime = FALSE,
+  confint = TRUE,
+  automar,
+  atrisk = ifelse(add, FALSE, TRUE),
+  timeOrigin = 0,
+  axes = TRUE,
+  background = TRUE,
+  percent = TRUE,
+  minAtrisk = 0,
+  limit = 10,
+  ...
+)
 }
 \arguments{
 \item{x}{an object of class `prodlim' as returned by the
@@ -52,6 +77,8 @@ to show curves. When omitted element \code{X} of object
 
 \item{xlab}{label for the x-axis}
 
+\item{num.digits}{Number of digits when rounding off numerical values for legend and at-risk tables.}
+
 \item{timeconverter}{The following options are supported:
 "days2years" (conversion factor: 1/365.25)
 "months2years" (conversion factor: 1/12)
@@ -64,6 +91,8 @@ to show curves. When omitted element \code{X} of object
 legend.  Optional arguments of the function \code{legend} can
 be given in the form \code{legend.x=val} where x is the name of
 the argument and val the desired value. See also Details.}
+
+\item{short.labels}{Logical. When \code{FALSE} construct labels as cause=1, var1=v1, var2=v2 else as 1, v1, v2.}
 
 \item{logrank}{If TRUE, the logrank p-value will be extracted from
 a call to \code{survdiff} and added to the legend. This works

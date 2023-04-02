@@ -3,14 +3,26 @@
 \docType{package}
 \name{prodlim}
 \alias{prodlim}
-\alias{prodlim-package}
 \title{Functions for estimating probabilities from right censored data}
 \usage{
-prodlim(formula, data = parent.frame(), subset, na.action = NULL,
-  reverse = FALSE, conf.int = 0.95, bandwidth = NULL, caseweights,
-  discrete.level = 3, x = TRUE, maxiter = 1000, grid, tol = 7,
+prodlim(
+  formula,
+  data = parent.frame(),
+  subset,
+  na.action = NULL,
+  reverse = FALSE,
+  conf.int = 0.95,
+  bandwidth = NULL,
+  caseweights,
+  discrete.level = 3,
+  x = TRUE,
+  maxiter = 1000,
+  grid,
+  tol = 7,
   method = c("npmle", "one.step", "impute.midpoint", "impute.right"),
-  exact = TRUE, type)
+  exact = TRUE,
+  type
+)
 }
 \arguments{
 \item{formula}{A formula whose left hand side is a \code{Hist}
@@ -116,13 +128,13 @@ Stute 1984, Akritas 1994).
 
 (2) For cluster-correlated data the right hand side of \code{formula} may
 identify a \code{\link{cluster}} variable. In that case Greenwood's variance
-formula is replaced by the formula of Ying \& Wei (1994).
+formula is replaced by the formula of Ying and Wei (1994).
 
 (3) Competing risk models can be specified via \code{\link{Hist}} response
 objects in \code{formula}.
 
 The Aalen-Johansen estimator is applied for estimating the absolute risk of the competing causes, i.e., the cumulative
-incidence functions.
+incidence functions. 
 
 Under construction:
 

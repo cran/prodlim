@@ -3,15 +3,15 @@ library(prodlim)
 library(data.table)
 context("Prodlim")
 
-test_that("competing risk in case of only one event",{
+test_that("Competing risks: asking for case for event that does not exist in data",{
     ##
     set.seed(10)
     d <- SimSurv(10)
     setDT(d)
     d[,event:=factor(event,levels=c(0,1),labels=c("0","2"))]
     f <- prodlim(Hist(time,event)~X1,data=d)
-    predict(f,cause="2",times=4,newdata=data.frame(X1=1))
-    expect_error(predict(f,cause="1",times=4,newdata=data.frame(X1=1)))
+    predict(f,cause="2",times=8,newdata=data.frame(X1=1))
+    expect_error(predict(f,cause="1",times=8,newdata=data.frame(X1=1)))
     set.seed(10)
     dd <- SimCompRisk(20)
     F <- prodlim(Hist(time,event)~X1,data=dd)
@@ -28,11 +28,12 @@ test_that("strata",{
     expect_output(print(prodlim(Hist(time,status)~b+factor(a),data=d)))
 })
 
-test_that("prodlim",{
+
+test_that("prodlim: print and summary  ",{
     library(lava)
     library(riskRegression)
-    library(etm)
-    ## library(survival)
+    library(survival)
+    # lava some data
     m <- crModel()
     addvar(m) <- ~X1+X2+X3+X4+X5+X6
     distribution(m,"X3") <- binomial.lvm()
@@ -46,89 +47,116 @@ test_that("prodlim",{
     set.seed(17)
     d <- sim(m,200)
     d$X1 <- factor(d$X1,levels=c(0,1,2),labels=c("low survival","medium survival","high survival"))
-    ## d$X3 <- factor(d$X3,levels=c(0,1),labels=c("high survival","low survival"))
     d$X5 <- factor(d$X5,levels=c("0","1","2","3"),labels=c("one","two","three","four"))
     d$Event <- factor(d$event,levels=c("0","1","2"),labels=c("0","cause-1","cause-2"))
     d$status <- 1*(d$event!=0)
-    head(d)
+    # marginal Kaplan-Meier
     s0 <- prodlim(Hist(time,status)~1,data=d)
-    print(s0)
-    summary(s0,intervals=TRUE)
+    expect_output(print(s0))
+    a <- summary(s0,intervals=TRUE)
+    b <- summary(s0,intervals=TRUE,format="list")$table
+    attributes(a) <- attributes(b)
+    expect_equal(a,b)
     stats::predict(s0,times=1:10)
-    ## plot(s0)
+    # 
+    # stratified Kaplan-Meier vs subsetting
+    #
     su <- prodlim(Hist(time,status)~1,data=d,subset=d$X1=="medium survival")
-    print(su)
     s1 <- prodlim(Hist(time,status)~X1,data=d)
-    print(s1)
-    summary(s1,intervals=TRUE,newdata=data.frame(X1=c("medium survival","high survival","low survival")))
+    S1 <- summary(s1,intervals=0,newdata=data.frame(X1=c("medium survival")))
+    S2 <- summary(s1,intervals=0,newdata=data.frame(X1=c("medium survival","high survival","low survival")))
+    S1a <- S2[S2$X1=="medium survival",]
+    rownames(S1a) <- 1:NROW(S1a)
+    expect_equal(S1,S1a)
     stats::predict(s1,times=0:10,newdata=data.frame(X1=c("medium survival","low survival","high survival")))
-    ## plot(s1)
+    suppressWarnings(A <- summary(su,intervals=0,times=S1$time))
+    S1$X1 <- NULL
+    attributes(A) <- attributes(S1)
+    all.equal(A,S1)
+    #
+    # Beran estimator
+    #
     s2 <- prodlim(Hist(time,status)~X2,data=d)
-    print(s2)
-    summary(s2,intervals=TRUE)
+    expect_output(print(s2))
+    suppressWarnings(summary(s2,intervals=TRUE))
     stats::predict(s2,times=0:10,newdata=data.frame(X2=quantile(d$X2)))
-    ## plot(s2)
+    #
+    # Kaplan-Meier: two strata variable
+    #
     s1a <- prodlim(Hist(time,status)~X1+X3,data=d)
-    print(s1a)
-    summary(s1a,intervals=TRUE)
+    expect_output(print(s1a))
     stats::predict(s1a,times=0:10,newdata=expand.grid(X1=levels(d$X1),X3=unique(d$X3)))
-    ## plot(s1a,confint=FALSE,atrisk=FALSE,legend.x="bottomleft",legend.cex=0.8)
+    summary(s1a,intervals=TRUE,newdata=s1a$X[c(2,3),])
+    #
+    # Stratified Beran estimator
+    #
     s3 <- prodlim(Hist(time,status)~X1+X2,data=d)
-    print(s3)
-    summary(s3,intervals=TRUE)
+    expect_output(print(s3))
     stats::predict(s3,times=0:10,newdata=expand.grid(X1=levels(d$X1),X2=c(quantile(d$X2,0.05),median(d$X2))))
-    ## plot(s3,confint=FALSE,atrisk=FALSE,legend.x="bottomleft",legend.cex=0.8,newdata=expand.grid(X1=levels(d$X1),X2=c(quantile(d$X2,0.05),median(d$X2))))
+    suppressWarnings(summary(s3,intervals=TRUE))
+    #
+    # marginal Aalen-Johansen competing risks
+    #
     f0 <- prodlim(Hist(time,event)~1,data=d)
-    print(f0)
+    expect_output(print(f0))
     summary(f0,intervals=TRUE)
     stats::predict(f0,times=1:10)
-    ## plot(f0)
+    #
+    # stratified Aalen-Johansen competing risks
+    #
     f1 <- prodlim(Hist(time,event)~X1,data=d)
-    print(f1)
+    expect_output(print(f1))
     summary(f1,intervals=TRUE,newdata=data.frame(X1=c("medium survival","high survival","low survival")))
+    summary(f1,intervals=TRUE,cause=2,newdata=data.frame(X1=c("medium survival","low survival")))
     stats::predict(f1,times=0:10,newdata=data.frame(X1=c("medium survival","low survival","high survival")))
-    ## plot(f1)
+    #
+    # Beran-Aalen-Johansen competing risks
+    #
     f2 <- prodlim(Hist(time,event)~X2,data=d)
-    print(f2)
-    summary(f2,intervals=TRUE)
+    expect_output(print(f2))
+    suppressWarnings(summary(f2,intervals=TRUE))
     stats::predict(f2,times=0:10,newdata=data.frame(X2=quantile(d$X2)))
-    ## plot(f2)
+    #
+    # 2-strata Aalen-Johansen competing risks
+    #    
     f1a <- prodlim(Hist(time,event)~X1+X3,data=d)
-    print(f1a)
+    expect_output(print(f1a))
     summary(f1a,intervals=TRUE)
     stats::predict(f1a,times=0:10,newdata=expand.grid(X1=levels(d$X1),X3=unique(d$X3)))
-    ## plot(f1a,confint=FALSE,atrisk=FALSE,legend.x="bottomleft",legend.cex=0.8)
+    #
+    # stratified Beran-Aalen-Johansen competing risks
+    #    
     f3 <- prodlim(Hist(time,event)~X1+X2,data=d)
-    print(f3)
-    summary(f3,intervals=TRUE)
+    expect_output(print(f3))
+    suppressWarnings(summary(f3,intervals=TRUE))
     stats::predict(f3,times=0:10,newdata=expand.grid(X1=levels(d$X1),X2=c(quantile(d$X2,0.05),median(d$X2))))
-    ## plot(f3,confint=FALSE,atrisk=FALSE,legend.x="bottomleft",legend.cex=0.8,newdata=expand.grid(X1=levels(d$X1),X2=c(quantile(d$X2,0.05),median(d$X2))))
+})
+
+test_that("prodlim vs survfit",{
     data(pbc)
     prodlim.0 <- prodlim(Hist(time,status!=0)~1,data=pbc)
     survfit.0 <- survfit(Surv(time,status!=0)~1,data=pbc)
-    ## plot(survfit.0)
-    ## plot(prodlim.0,add=TRUE,col=2,lwd=3)
-    ttt <- sort(unique(d$time)[d$event==1])
+    ttt <- sort(unique(pbc$time)[pbc$status!=0])
     ttt <- ttt[-length(ttt)]
     sum0.s <- summary(survfit.0,times=ttt)
-    ## plot(survfit.0,lwd=6)
-    ## plot(prodlim.0,add=TRUE,col=2)
-    ## There is arounding issue:
-    testdata <- data.frame(time=c(16.107812,3.657545,1.523978),event=c(0,1,1))
-    sum0 <- summary(survfit(Surv(time,event)~1,data=testdata),times=sort(testdata$time))
-    testdata$timeR <- round(testdata$time,1)
-    sum1 <- summary(survfit(Surv(timeR,event)~1,data=testdata),times=sort(testdata$time))
-    sum0
-    sum1
+    ## There is arounding issue with survfit:
+    #---------------------------------------------------------------------------------------
+    ## testdata <- data.frame(time=c(16.107812,3.657545,1.523978),event=c(0,1,1))
+    ## sum0 <- summary(survfit(Surv(time,event)~1,data=testdata),times=sort(testdata$time))
+    ## testdata$timeR <- round(testdata$time,1)
+    ## sum1 <- summary(survfit(Surv(timeR,event)~1,data=testdata),times=sort(testdata$time))
+    ## sum0
+    ## sum1
     ## sum0 != sum1
     ## summary(survfit.0,times=c(0,0.1,0.2,0.3))
+    #---------------------------------------------------------------------------------------
     result.survfit <- data.frame(time=sum0.s$time,n.risk=sum0.s$n.risk,n.event=sum0.s$n.event,surv=sum0.s$surv,std.err=sum0.s$std.err,lower=sum0.s$lower,upper=sum0.s$upper)
-    result.prodlim <- data.frame(summary(prodlim.0,times=ttt)$table[,c("time","n.risk","n.event","n.lost","surv","se.surv","lower","upper")])
-    cbind(result.survfit[,c("time","n.risk","n.event","surv")],result.prodlim[,c("time","n.risk","n.event","surv")])
+    result.prodlim <- data.frame(summary(prodlim.0,times=ttt)[,c("time","n.risk","n.event","n.lost","surv","se.surv","lower","upper")])
+    ## cbind(result.survfit[,c("time","n.risk","n.event","surv")],result.prodlim[,c("time","n.risk","n.event","surv")])
     a <- round(result.survfit$surv,8)
     b <- round(result.prodlim$surv[!is.na(result.prodlim$se.surv)],8)
-    if (all(a==b)){cat("\nOK\n")}else{cat("\nERROR\n")}
-    if (all(round(result.survfit$std.err,8)==round(result.prodlim$se.surv[!is.na(result.prodlim$se.surv)],8))){cat("\nOK\n")}else{cat("\nERROR\n")}
+    expect_equal(a,b)
+    expect_equal(round(result.survfit$std.err,8),round(result.prodlim$se.surv[!is.na(result.prodlim$se.surv)],8))
     pbc <- pbc[order(pbc$time,-pbc$status),]
     set.seed(17)
     boot <- sample(1:NROW(pbc),size=NROW(pbc),replace=TRUE)
@@ -137,7 +165,10 @@ test_that("prodlim",{
     ## plot(s1,col=1,confint=FALSE,lwd=8)
     s2 <- prodlim(Hist(time,status>0)~1,data=pbc[sort(boot),])
     ## plot(s2,add=TRUE,col=2,confint=FALSE,lwd=3)
+    expect_equal(summary(s1,intervals=1,times=seq(0,3500,500)),summary(s2,intervals=1,times=seq(0,3500,500)))
 })
+
+
 test_that("weigths, subset and smoothing",{
     d <- SimSurv(100)
     f1 <- prodlim(Hist(time,status)~X2,data=d)
@@ -155,10 +186,11 @@ test_that("weigths, subset and smoothing",{
     expect_equal(predict(f1,newdata = d[1, ], times = 5),
                  predict(f2, newdata = d[1, ], times = 5))
 })
+
 test_that("weights and delay",{
     library(survival)
     library(survey)
-    library(SmoothHazard)
+    ## library(SmoothHazard)
     library(etm)
     pbc <- pbc[order(pbc$time,-pbc$status),]
     ## pbc$randprob<-fitted(biasmodel)
@@ -173,6 +205,9 @@ test_that("weights and delay",{
     pbc$entry <- round(pbc$time/5)
     survfit.delay <- survfit(Surv(entry,time,status!=0)~1,data=pbc)
     prodlim.delay <- prodlim(Hist(time,status!=0,entry=entry)~1,data=pbc)
+    a <- summary(survfit.delay)
+    b <- summary(prodlim.delay,times=a$time)
+    expect_equal(a$surv,b$surv)
     ## plot(survfit.delay,lwd=8)
     ## plot(prodlim.delay,lwd=4,col=2,add=TRUE,confint=FALSE)
     pbc0 <- pbc
@@ -183,15 +218,17 @@ test_that("weights and delay",{
     ## prodlim.delay.edema.0.5 <- prodlim(Hist(time,status!=0,entry=entry)~1,data=pbc0[pbc0$edema==0.5,])
     ## plot(survfit.delay.edema,conf.int=FALSE,col=1:3,lwd=8)
     ## plot(prodlim.delay.edema,add=TRUE,confint=FALSE,col=c("gray88","orange",5),lwd=4)
+    ## a <- summary(survfit.delay.edema)
+    ## b <- summary(prodlim.delay.edema,times=a$time)
+    ## expect_equal(a$surv,b$surv)    
     data(abortion)
     cif.ab.etm <- etmCIF(Surv(entry, exit, cause != 0) ~ 1,abortion,etype = cause,failcode = 3)
     cif.ab.prodlim <- prodlim(Hist(time=exit, event=cause,entry=entry) ~ 1,data=abortion)
-    plot(cif.ab.etm,lwd=8,col=3)
-    plot(cif.ab.prodlim,add=TRUE,lwd=4,col=5,cause=3)
-    data(abortion)
+    ## plot(cif.ab.etm,lwd=8,col=3)
+    ## plot(cif.ab.prodlim,add=TRUE,lwd=4,col=5,cause=3)
     x <- prodlim(Hist(time=exit, event=cause,entry=entry) ~ 1,data=abortion)
-    x0 <- etmCIF(Surv(entry, exit, cause != 0) ~ 1,abortion,etype = cause)
-    graphics::par(mfrow=c(2,2))
+    x0 <- etmCIF(Surv(entry, exit, cause != 0) ~ 1,data=abortion,etype = cause)
+    ## graphics::par(mfrow=c(2,2))
     cif.ab.etm <- etmCIF(Surv(entry, exit, cause != 0) ~ 1,abortion,etype = cause,failcode = 3)
     cif.ab.prodlim <- prodlim(Hist(time=exit, event=cause,entry=entry) ~ 1,data=abortion)
                                         # cause 3
@@ -203,7 +240,6 @@ test_that("weights and delay",{
                                         # cause 1
     ## plot(cif.ab.etm, ci.type = "bars", pos.ci = 24, col = c(1, 2), lty = 1,which.cif=1,lwd=8)
     ## plot(cif.ab.prodlim,add=TRUE,cause=1,confint=TRUE,col=2)
-    data(abortion)
     cif.ab.etm <- etmCIF(Surv(entry, exit, cause != 0) ~ group,abortion,etype = cause,failcode = 3)
     names(cif.ab.etm[[1]])
     head(cbind(cif.ab.etm[[1]]$time,cif.ab.etm[[1]]$n.risk))
@@ -218,38 +254,26 @@ test_that("weights and delay",{
     ## plot(cif.test.etm, ci.type = "bars", pos.ci = 24, lwd=5)
     ## plot(cif.test.prodlim,add=TRUE,cause=2,col=2,confint=TRUE,type="cuminc")
     ## simulate data from an illness-death model
-    mod <- idmModel(K=10,schedule=0,punctuality=1)
-    regression(mod,from="X",to="lifetime") <- log(2)
-    regression(mod,from="X",to="waittime") <- log(2)
-    regression(mod,from="X",to="illtime") <- log(2)
-    set.seed(137)
+    ## mod <- idmModel(K=10,schedule=0,punctuality=1)
+    ## regression(mod,from="X",to="lifetime") <- log(2)
+    ## regression(mod,from="X",to="waittime") <- log(2)
+    ## regression(mod,from="X",to="illtime") <- log(2)
+    ## set.seed(137)
     ## we round the event times to have some ties
-    testdata <- round(sim(mod,250),1)
+    ## testdata <- round(sim(mod,250),1)
     ## the data enter with delay into the intermediate state (ill)
     ## thus, to estimate the absolute risk cumulative incidence of
     ## the absorbing state (death) after illness we 
     ## have left-truncated data
-    illdata <- testdata[testdata$illstatus==1,]
-    illdata <- illdata[order(illdata$lifetime,-illdata$seen.exit),]
+    ## illdata <- testdata[testdata$illstatus==1,]
+    ## illdata <- illdata[order(illdata$lifetime,-illdata$seen.exit),]
     ## sindex(jump.times=illdata$illtime,eval.times=illdata$lifetime)
     ## F <- prodlim(Hist(lifetime,status,entry=illtime)~1,data=illdata[1:5,])
     ## f <- survfit(Surv(illtime,lifetime,status)~1,data=illdata[1:5,],type="kaplan-meier")
-    survfit.delayed.ill <- survfit(Surv(illtime,lifetime,seen.exit)~1,data=illdata)
-    prodlim.delayed.ill <- prodlim(Hist(lifetime,seen.exit,entry=illtime)~1,data=illdata)
+    ## survfit.delayed.ill <- survfit(Surv(illtime,lifetime,seen.exit)~1,data=illdata)
+    ## prodlim.delayed.ill <- prodlim(Hist(lifetime,seen.exit,entry=illtime)~1,data=illdata)
     ## plot(survfit.delayed.ill,lwd=5)
     ## plot(prodlim.delayed.ill,lwd=2,col=2,add=TRUE)
-})
-test_that("interval censored",{
-    library(SmoothHazard)
-    m <- idmModel(scale.illtime=1/70,
-                  shape.illtime=1.8,
-                  scale.lifetime=1/50,
-                  shape.lifetime=0.7,
-                  scale.waittime=1/30,
-                  shape.waittime=0.7)
-    d <- round(sim(m,6),1)
-    icens <- prodlim(Hist(time=list(L,R),event=seen.ill)~1,data=d)
-    ## plot(icens)
 })
 
 test_that("left truncation: survival",{
@@ -272,10 +296,13 @@ test_that("left truncation: survival",{
     summary.survfit.delayed <- summary(survfit.delayed,times=c(0,10,56,267,277,1000,2000))
     summary.prodlim.delayed <- summary(prodlim.delayed,times=c(0,10,56,267,277,1000,2000),intervals=1)
     expect_equal(as.numeric(summary.survfit.delayed$surv),
-                 as.numeric(summary.prodlim.delayed$table[,"surv"]))
+                 as.numeric(unlist(summary.prodlim.delayed[,"surv"])))
     ## FIXME: lifetab does not handle delayed entry
     ##        and shows wrong numbers at risk before the
     ##        first event time
     ## expect_equal(as.numeric(summary.survfit.delayed$n.risk),
-                 ## as.numeric(summary.prodlim.delayed$table[,"n.risk"]))
+    ## as.numeric(summary.prodlim.delayed[,"n.risk"]))
+    
 })
+
+

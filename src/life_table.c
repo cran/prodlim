@@ -11,7 +11,8 @@ void life_table(int *pred_nrisk,
 		int *first,
 		int *size,
 		int *NR,
-		int *NT){
+		int *NT,
+		int *delayed){
 
   
   int i,t,s,count_e,count_l,First,Last;
@@ -52,7 +53,7 @@ void life_table(int *pred_nrisk,
     There are three cases:
     
     (1) the interval lays before the first event time
-    (2) the interval includes one event time
+    (2) the interval lays includes one event time
     (3) the interval lays behind the last event time
     
   */
@@ -70,8 +71,13 @@ void life_table(int *pred_nrisk,
 	  case (1) interval before the first event time:
 	  
 	  [)....
+
+	  with delayed entry no one is at risk before the first entry time
 	*/
-	pred_nrisk[t + i *(*NT)] = nrisk[First];
+	if (*delayed)
+	  pred_nrisk[t + i *(*NT)] = 0;
+	else
+	  pred_nrisk[t + i *(*NT)] = nrisk[First];
 	pred_nevent[t + i *(*NT)] = 0;
 	pred_nlost[t + i *(*NT)] = 0;
       }
@@ -99,20 +105,21 @@ void life_table(int *pred_nrisk,
 	  /*
 	    first find number at risk just before lower[t] ...
 	  */
-	  /* Rprintf("s=%d\tFirst=%d\tnrisk=%d\n",s,First,nrisk[First+s]);  */
+	  /* Rprintf("s=%d\tt=%d\ti=%d\tupper[t]=%1.2f\tlower[t]=%1.2f\teventTime[i]=%1.2f\t\n",s,t,i,upper[t],lower[t],eventTime[i]); */
 	  if (s==0){
-	    pred_nrisk[t + i *(*NT)] = nrisk[First];
+	    if (*delayed)
+	      	    pred_nrisk[t + i *(*NT)] = 0;
+	    else
+         	    pred_nrisk[t + i *(*NT)] = nrisk[First];
 	  }
 	  else{
 	    pred_nrisk[t + i *(*NT)] = nrisk[First+s];
 	  }
-	  /* ... then count events and lost in interval [lower[t],upper[t]) */
+	  /* ... then count events and censored in interval [lower[t],upper[t]) */
 	  
-	  /* while ((s <= size[i]-1) && (eventTime[First + s] >= lower[t]) && (eventTime[First + s] < upper[t])){ */
 	  while ((s <= size[i]-1) && (eventTime[First + s] < upper[t])){
 	    count_e +=nevent[First+s];
 	    count_l +=nlost[First+s];
-	    /* Rprintf("s=%d\tsize=%d\tetime[First+s]=%1.2f\tlower[t]=%1.2f\tupper[t]=%1.2f\tnevent[First+s]=%d\tnlost[First+s]=%d\n",s,size[i]-1,eventTime[First+s],lower[t],upper[t],nevent[First+s],nlost[First+s]);  */
 	    s++;
 	  }
 	  pred_nevent[t + i *(*NT)] = count_e;

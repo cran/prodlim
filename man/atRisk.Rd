@@ -5,9 +5,27 @@
 \title{Drawing numbers of subjects at-risk of experiencing an event below
 Kaplan-Meier and Aalen-Johansen plots.}
 \usage{
-atRisk(x, newdata, times, line, col, labelcol = NULL, interspace, cex,
-  labels, title = "", titlecol = NULL, pos, adj, dist,
-  adjust.labels = TRUE, show.censored = FALSE, ...)
+atRisk(
+  x,
+  newdata,
+  times,
+  line,
+  col,
+  labelcol = NULL,
+  interspace,
+  cex,
+  labels,
+  title = "",
+  titlecol = NULL,
+  pos,
+  adj,
+  dist,
+  xdist,
+  adjust.labels = TRUE,
+  show.censored = FALSE,
+  unit = "npc",
+  ...
+)
 }
 \arguments{
 \item{x}{an object of class `prodlim' as returned by the
@@ -35,7 +53,7 @@ labels.}
 \item{titlecol}{The color for the title. Defaults to 1 (black).}
 
 \item{pos}{The value is passed on to the \code{mtext} argument
-\code{at} for the labels (not the atriks numbers).}
+\code{at} for the labels (not the atrisk numbers).}
 
 \item{adj}{Passed on to \code{mtext} for the labels (not the atriks
 numbers).}
@@ -43,9 +61,16 @@ numbers).}
 \item{dist}{If \code{line} is missing, the distance of the upper
 most atrisk row from the inner plotting region: par()$mgp[2].}
 
+\item{xdist}{Distance in x-axis direction to define the distance between the labels
+and the numbers at-risk. Deftaults to \code{strwidth("MM",cex=cex)}.}
+
 \item{adjust.labels}{If \code{TRUE} the labels are left adjusted.}
 
-\item{show.censored}{If \code{TRUE} the cumulative number of subjects lost to follow up is shown in parentheses.}
+\item{show.censored}{If \code{TRUE} the cumulative number of subjects
+lost to follow up is shown in parentheses.}
+
+\item{unit}{The graphical coordinate systems unit to convert from when line2user is calling \code{grconvertX} and \code{grconvertY}.
+Default is \code{'npc'}}
 
 \item{...}{Further arguments that are passed to the function
 \code{mtext}.}
