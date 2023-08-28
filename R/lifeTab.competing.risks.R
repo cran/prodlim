@@ -5,7 +5,7 @@ lifeTab.competing.risks <- function(object,
                                     stats,
                                     intervals=FALSE,
                                     percent=TRUE,
-                                    format){
+                                    format,...){
     # {{{---------get the indices--------------------------
     IndeX <- predict(object,newdata=newdata,level.chaos=0,times=times,type="list")
     # }}}
@@ -200,7 +200,6 @@ lifeTab.competing.risks <- function(object,
                 out <- cbind(X,tt,out)
                 data.table::setDT(out)
                 data.table::setkeyv(out,colnames(X))
-                rownames(out) <- 1:NROW(out)
                 out
             }
         } else{

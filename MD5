@@ -1,7 +1,7 @@
-35c1e426857bcb365048f7d24653a5f7 *DESCRIPTION
+0ef6c35a8c644e86ce771ec43669ccf8 *DESCRIPTION
 1b80f58b9a9ce58d83f2e83b2a9c01e1 *NAMESPACE
 700e465b74dd28a560a30f5b06360357 *R/EventHistory.frame.R
-4b3d2cd65075c15a8312098ec4a722c7 *R/Hist.R
+536c950eb5467fcf3ee087ae1f2394fa *R/Hist.R
 be8abadfc67bbe882d839436b1b7a6b0 *R/IntIndex.R
 8c7c283f389119789f8043d290888440 *R/List2Matrix.R
 f1e85f220d6d60c0bdea43cf0d798ee1 *R/PercentAxis.R
@@ -15,7 +15,7 @@ f1f434fd1a89baa0c7e2e743ea090769 *R/checkCauses.R
 d97cfbff4c631759c14739d03a2487d8 *R/confInt.R
 0a6240db9cb5432524631a3f0ba727dd *R/crModel.R
 cf66dce602483984ad98363e46fe86ab *R/dimColor.R
-eab6b61b3c9ff343e013a5b5c26c6d2d *R/eventsMethods.R
+173f56223c56deb819d5ec76cf831d3c *R/eventsMethods.R
 79bd579e911d018d6047a58dcb41c117 *R/extract.name.from.special.R
 ed7d78d81504dc80a3e3d718a0c8a5c9 *R/findArrow.R
 9c2aca2637a7b2535e5558d83f95597f *R/followup.R
@@ -25,8 +25,8 @@ b2cb2d803b526f2fbdd920c0d655966f *R/getEvent.R
 b993b8e9335a084c16dfd634afe05345 *R/jackknife.R
 dbd6c0c037a0ecc945bbbb49ae5d0245 *R/leaveOneOut.R
 48e459a128162320bcce808c550384a3 *R/lifeTab.R
-4b971edb972fb39f200afc0d4d6ff886 *R/lifeTab.competing.risks.R
-a16a77994bcac417ca24cf9d034de7ea *R/lifeTab.survival.R
+b9e2b8c40a62356a833971595d08ae9d *R/lifeTab.competing.risks.R
+149b38f2efab84dcb2674f047ba1899c *R/lifeTab.survival.R
 5b8a0f07ace6586bf09af883e18a3e86 *R/line2user.R
 68938f12148cbaa743b8c3a0e541232c *R/lines.prodlim.R
 12a0d8c9b61acbce53ecb65da3c168ac *R/listNbh.R
@@ -51,7 +51,7 @@ f94cd63d1d15681cfb095ac087b52f8b *R/predictSurvIndividual.R
 3bc16ac378fc4d91b685b2e6d3c0f77a *R/print.prodlim.R
 02532b80fcaf220d3b56d0e5d4c39314 *R/print.quantile.prodlim.R
 c9d2392b5ce67ed2e199ccca47f3eba3 *R/print.summary.prodlim.R
-490cd45b44fd53b8838462a627a02624 *R/prodlim-package.R
+2795efb06c65df47ab3858e386081e3c *R/prodlim-package.R
 8f587694c3609ef72998693362938635 *R/prodlim.R
 33bd15d77d337f6e6f2d77a95cb2f4e9 *R/prodlimIcensSurv.R
 5fefc2bba43698b27c38b473bfdfbf3e *R/prodlimMulti.R
@@ -95,7 +95,8 @@ c52135ce78e509059ae7df1859d47188 *man/plot.prodlim.Rd
 4349d8f3d6cd0242036942f9fbbc4bf2 *man/predict.prodlim.Rd
 0f58fc7e028ddd571cafaee81512766f *man/predictSurvIndividual.Rd
 5d0801e92b3b6474baa4e86a9a31a9db *man/print.prodlim.Rd
-59630d5de619199fbb489cac01400d4f *man/prodlim.Rd
+8a0531baae5c22cde32a01677dd37055 *man/prodlim-package.Rd
+856a35b219746fe6672a2b532862e161 *man/prodlim.Rd
 727f86cd742d90815588f765832ae1a7 *man/quantile.prodlim.Rd
 bef8b9d661fb3dbcd00b78baa76a8abf *man/redist.Rd
 c81364f885701ae50aead20447273f24 *man/row.match.Rd
