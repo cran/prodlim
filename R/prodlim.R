@@ -168,17 +168,22 @@
 ##' ## is that events come first. This is not obeyed by the above call to survfit,
 ##' ## and hence only prodlim delivers the correct reverse Kaplan-Meier:
 ##' cbind("Wrong:"=rsfit$surv,"Correct:"=rpfit$surv)
+##' ##----------------  quantiles of the potential followup time-----
+##'
+##' G=prodlim(Hist(time,status)~X1,data=dat,reverse=TRUE)
+##' quantile(G)
 ##' 
 ##' ##-------------------stratified Kaplan-Meier---------------------
 ##' 
-##' pfit.X2 <- prodlim(Surv(time,status)~X2,data=dat)
-##' summary(pfit.X2)
-##' summary(pfit.X2,intervals=TRUE)
-##' plot(pfit.X2)
+##' stratfit <- prodlim(Surv(time,status)~X1,data=dat)
+##' summary(stratfit)
+##' summary(stratfit,intervals=TRUE)
+##' plot(stratfit)
 ##' 
 ##' ##----------continuous covariate: Stone-Beran estimate------------
 ##' 
-##' prodlim(Surv(time,status)~X1,data=dat)
+##' SB=prodlim(Surv(time,status)~X2,data=dat)
+##' summary(SB,newdata=data.frame(X2=c(-0.3,0,.5)))
 ##' 
 ##' ##-------------both discrete and continuous covariates------------
 ##' 
@@ -232,7 +237,6 @@
                       caseweights,
                       discrete.level=3,
                       x=TRUE,
-                      # force.multistate=FALSE,
                       maxiter=1000,
                       grid,
                       tol=7,
@@ -269,7 +273,7 @@
         stopifnot(match(type,c("surv","risk"),nomatch=0)!=0)
     }
     cens.type <- attr(response,"cens.type")
-    #  if (force.multistate==TRUE) model.type <- 3
+
     # {{{ order according to event times
     if (cens.type!="intervalCensored"){
         event.time.order <- order(event.history[,"time"],-event.history[,"status"])
@@ -506,8 +510,7 @@
         if (cotype==1){
             NC <- length(unique(cluster))
             cluster <- factor(cluster,labels=1:NC)
-        }
-        else{
+        } else{
             if (cotype==2){
                 NC <- unlist(tapply(cluster,Sfactor,function(x){length(unique(x))}))
                 cluster <- as.numeric(unlist(tapply(cluster,Sfactor,function(x){
@@ -616,7 +619,8 @@
             states <- attr(response,"states")
             E <- response[,"event"]-1 # for the c routine
             D <- response[,"status"]
-            NS <- length(unique(E[D!=0])) # number of different causes
+            ## NS <- length(unique(E[D!=0])) # number of different causes
+            NS <- length(states)
             fit <- .C("prodlimSRC",
                       as.double(response[,"time"]),
                       as.double(D),
@@ -649,19 +653,16 @@
                       weighted=as.integer(weighted),
                       PACKAGE="prodlim")
             NT <- fit$ntimes
-            # changed Tue Sep 30 12:51:58 CEST 2008
-            # its easier to work with a list than with a matrix
-            #      gatherC <- function(x,dimR=fit$ntimes,dimC=NS,names=states){
-            #        matrix(x[1:(dimR*dimC)],ncol=dimC,byrow=TRUE,dimnames=list(rep("",dimR),names))
-            #      }
-            gatherC <- function(x,dimR=fit$ntimes,dimC=NS,names=states){
-                out <- split(x[1:(dimR*dimC)],rep(1:NS,dimR))
+            # changed Tue Sep 30 12:51:58 CEST 2008 from matrix to list
+            # changed Tue 04 Mar 2025 (13:01) to allow events that do not occur in the data
+            gatherC <- function(x,ntimes=fit$ntimes,nstrata=NS,names=states){
+                out <- split(x[1:(ntimes*nstrata)],rep(1:nstrata,ntimes))
                 names(out) <- names
                 out
             }
             Cout <- list("time"=fit$time[1:NT],
                          "n.risk"=fit$nrisk[1:NT],
-                         "n.event"=gatherC(fit$nevent),
+                         "n.event"=gatherC(x = fit$nevent),
                          "n.lost"=fit$ncens[1:NT],
                          "cuminc"=gatherC(fit$risk),
                          "var.cuminc"=gatherC(fit$var.hazard),
@@ -689,9 +690,13 @@
                 ## pointwise confidence intervals for survival probability
                 zval <- qnorm(1- (1-conf.int)/2, 0,1)
                 lower <- pmax(Cout$surv - zval * Cout$se.surv,0)
-                lower[Cout$se.surv==0] <- 0
+                # change 05 Mar 2025 (08:45) from [0,1] to [S(t),S(t)] in
+                # in case of no variation
+                no_variation <- Cout$se.surv==0
+                no_variation[is.na(no_variation)] = TRUE
+                lower[no_variation] <- Cout$surv[no_variation]
                 upper <- pmin(Cout$surv + zval * Cout$se.surv,1)
-                upper[Cout$se.surv==0] <- 1
+                upper[no_variation] <- Cout$surv[no_variation]
                 Cout <- c(Cout,list(lower=lower,upper=upper))
             }
         }

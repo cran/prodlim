@@ -155,7 +155,6 @@ summary.prodlim <- function(object,
     cotype <- object$covariate.type       # no, discrete, continuous or both
     # }}}
     # {{{ times
-
     jump.times <- object$time
     if (missing(times) && (length(times <- jump.times) > 50)) 
         times <- quantile(sort(unique(jump.times)))
@@ -166,7 +165,6 @@ summary.prodlim <- function(object,
                 paste("\n","Time(s) ",paste(times[times>max(jump.times)],collapse=", "),
                       " are beyond the maximal follow-up time ",max(jump.times),"\n"))
     ntimes <- length(times)
-
     # }}}
     # {{{ interval-censored
     if (cens.type=="intervalCensored"){
@@ -210,7 +208,7 @@ summary.prodlim <- function(object,
         if (model=="survival") {
             stats <- list(c("surv",1),c("se.surv",0))
             if (!is.null(object$conf.int))
-                stats <- c(stats,list(c("lower",0),c("upper",1)))
+                stats <- c(stats,list(c("lower",1),c("upper",1)))
             if (surv==FALSE){
                 object$cuminc <- 1-object$surv
                 object$se.cuminc <- object$se.surv
@@ -220,7 +218,7 @@ summary.prodlim <- function(object,
                 object$upper <- cuminc.upper
                 stats <- list(c("cuminc",0),c("se.cuminc",0))
                 if (!is.null(object$conf.int))
-                    stats <- c(stats,list(c("lower",0),c("upper",1)))
+                    stats <- c(stats,list(c("lower",1),c("upper",1)))
             }
         }
         if (model=="competing.risks"){
